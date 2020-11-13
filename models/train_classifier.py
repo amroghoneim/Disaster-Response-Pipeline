@@ -67,8 +67,7 @@ def evaluate_model(model, X_test, Y_test, category_names):
 
 def save_model(model, model_filepath):
     # save the model to disk
-    filename = 'finalized_model.sav'
-    pickle.dump(model, open(filename, 'wb'))
+    pickle.dump(model, open(model_filepath, 'wb'))
 
 
 def main():
