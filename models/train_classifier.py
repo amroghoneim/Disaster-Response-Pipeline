@@ -28,7 +28,8 @@ def load_data(database_filepath):
     df = df.dropna()
     X = df['message'].values
     y = df.drop(columns=['message']).values
-    return X,y
+    category_names = df.drop(columns=['message']).columns
+    return X, y, category_names
 
 
 def tokenize(text):
@@ -53,20 +54,7 @@ def build_model():
         ('tfidf', TfidfTransformer()),
         ('clf', MultiOutputClassifier(RandomForestClassifier()))])
     
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state = 42)
-    parameters = {
-    'vect__ngram_range': ((1, 1), (1, 2)),
-    'vect__max_df': (0.5, 0.75, 1.0),
-    'vect__max_features': (None, 5000, 10000),
-    'tfidf__use_idf': (True, False),
-    'clf__estimator__n_estimators': [50, 100, 200],
-    'clf__estimator__min_samples_split': [2, 3, 4]
-    }
-
-    cv = GridSearchCV(pipeline, param_grid=parameters)
-
-    cv.fit(X_train, y_train)
-    return cv
+    return pipeline
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
@@ -78,7 +66,9 @@ def evaluate_model(model, X_test, Y_test, category_names):
 
 
 def save_model(model, model_filepath):
-    pass
+    # save the model to disk
+    filename = 'finalized_model.sav'
+    pickle.dump(model, open(filename, 'wb'))
 
 
 def main():
