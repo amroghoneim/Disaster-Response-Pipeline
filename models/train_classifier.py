@@ -1,11 +1,38 @@
 import sys
+from sqlalchemy import create_engine
+import pandas as pd
+import re
+import nltk
+nltk.download(['punkt', 'wordnet', 'averaged_perceptron_tagger'])
+import numpy as np
+from nltk.tokenize import word_tokenize
+from nltk.stem import WordNetLemmatizer
+from sklearn.metrics import confusion_matrix,classification_report
+from sklearn.pipeline import Pipeline
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import GridSearchCV
+from sklearn.linear_model import LogisticRegression
+from sklearn.utils.multiclass import type_of_target
+from sklearn.multioutput import MultiOutputClassifier
+from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 
 
 def load_data(database_filepath):
-    pass
+    # load data from database
+    engine = create_engine(database_filepath)
+    df = pd.read_sql_table('messages', con = engine)
+    # remove unneccessary columns, especially 'original' column which contains a high number of null values
+    df = df.drop(columns=['id','original','genre'])
+    # remove remaining null rows
+    df = df.dropna()
+    X = df['message'].values
+    y = df.drop(columns=['message']).values
 
 
 def tokenize(text):
+    url_regex = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+
     pass
 
 
