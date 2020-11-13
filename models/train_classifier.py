@@ -70,7 +70,11 @@ def build_model():
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
-    pass
+    # predict on test data
+    y_pred = model.predict(X_test)
+
+    for i in range(y_pred.shape[1]):
+        print("{}: {}".format(category_names[i], classification_report(Y_test[:,i],y_pred[:,i])))
 
 
 def save_model(model, model_filepath):
