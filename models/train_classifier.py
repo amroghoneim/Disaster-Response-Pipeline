@@ -5,6 +5,7 @@ import re
 import nltk
 nltk.download(['punkt', 'wordnet', 'averaged_perceptron_tagger'])
 import numpy as np
+import pickle
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from sklearn.metrics import confusion_matrix,classification_report
@@ -20,15 +21,16 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 
 def load_data(database_filepath):
     # load data from database
-    engine = create_engine(database_filepath)
-    df = pd.read_sql_table('messages', con = engine)
+    engine = create_engine('sqlite:///'+database_filepath)
+    print(engine.table_names())
+    df = pd.read_sql_table(engine.table_names()[0], con = engine)
     # remove unneccessary columns, especially 'original' column which contains a high number of null values
     df = df.drop(columns=['id','original','genre'])
     # remove remaining null rows
     df = df.dropna()
     X = df['message'].values
     y = df.drop(columns=['message']).values
-    category_names = df.drop(columns=['message']).columns
+    category_names = df.drop(columns=['message']).columns.values
     return X, y, category_names
 
 
