@@ -19,6 +19,13 @@ def load_data(messages_filepath, categories_filepath):
 
 
 def clean_data(df):
+    '''
+    clean and organize dataframe to be used for future training
+    input:
+        - df : pandas dataframe to be cleaned
+    output:
+        - df : cleaned dataframe
+    '''
     categories_df = df['categories'].str.split(';', expand = True)
     
     # select the first row of the categories dataframe
@@ -44,17 +51,24 @@ def clean_data(df):
     df = df.drop_duplicates(subset=['id'], keep='first')
     df = df.drop_duplicates(subset=['message'], keep='first')
 
-
-    
     return df
 
 
 def save_data(df, database_filename):
+    '''
+        Save df to sql database file
+    input:
+        - df : dataframe to be saved
+        - database_filename : path name to be used for saving dataframe
+    '''
     engine = create_engine('sqlite:///data/DisasterResponse.db')
     df.to_sql('DisasterResponse', engine, index=False, if_exists='replace')  
 
 
 def main():
+    '''
+        Main function that executes the program
+    '''
     if len(sys.argv) == 4:
 
         messages_filepath, categories_filepath, database_filepath = sys.argv[1:]
