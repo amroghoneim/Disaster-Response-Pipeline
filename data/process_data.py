@@ -39,14 +39,19 @@ def clean_data(df):
     
     df = df.drop(columns=['categories'])
     df = pd.concat([df,categories_df], axis=1)
+    df['related'] = df['related'].replace([2.0], df['related'].mode())
     
-    df = df.drop_duplicates()
+    df = df.drop_duplicates(subset=['id'], keep='first')
+    df = df.drop_duplicates(subset=['message'], keep='first')
+
+
+    
     return df
 
 
 def save_data(df, database_filename):
     engine = create_engine('sqlite:///data/DisasterResponse.db')
-    df.to_sql('DisasterResponse', engine, index=False)  
+    df.to_sql('DisasterResponse', engine, index=False, if_exists='replace')  
 
 
 def main():

@@ -1,50 +1,57 @@
-import sys
-from sqlalchemy import create_engine
-import pandas as pd
+# import libraries
 import re
+import sys
 import nltk
-nltk.download(['punkt', 'wordnet', 'averaged_perceptron_tagger'])
-import numpy as np
+import warnings
+warnings.filterwarnings('ignore')
+nltk.download(['punkt', 'wordnet', 'stopwords'])
+import time
 import pickle
+import numpy as np
+import pandas as pd
+from sklearn.svm import SVC
+
+from nltk.corpus import stopwords
+from sqlalchemy import create_engine
+from sklearn.pipeline import Pipeline
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
-from sklearn.metrics import confusion_matrix,classification_report
-from sklearn.pipeline import Pipeline
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
+from nltk.stem.porter import PorterStemmer
 from sklearn.model_selection import GridSearchCV
-from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import fbeta_score, make_scorer
 from sklearn.utils.multiclass import type_of_target
+from sklearn.model_selection import train_test_split
 from sklearn.multioutput import MultiOutputClassifier
-from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics import confusion_matrix,classification_report, f1_score
 
 
 def load_data(database_filepath):
     # load data from database
     engine = create_engine('sqlite:///'+database_filepath)
-    print(engine.table_names())
     df = pd.read_sql_table(engine.table_names()[0], con = engine)
-    # remove unneccessary columns, especially 'original' column which contains a high number of null values
+    # remove unneccessary columns for training
     df = df.drop(columns=['id','original','genre'])
-    # remove remaining null rows
+    # remove null rows
     df = df.dropna()
-    X = df['message'].values
-    y = df.drop(columns=['message']).values
+    X = df['message']
+    y = df.drop(columns=['message'])
     category_names = df.drop(columns=['message']).columns.values
     return X, y, category_names
 
 
 def tokenize(text):
-    url_regex = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
-    detected_urls = re.findall(url_regex, text)
-    for url in detected_urls:
-        text = text.replace(url, "urlplaceholder")
-
+    # normalize case and remove punctuation
+    text = re.sub(r"[^a-zA-Z0-9]", " ", text.lower())
     tokens = word_tokenize(text)
+    stop_words = stopwords.words('english')
+    tokens = [w for w in tokens if w not in stop_words]
     lemmatizer = WordNetLemmatizer()
+
     clean_tokens = []
     for tok in tokens:
-        clean_tok = lemmatizer.lemmatize(tok).lower().strip()
+        clean_tok = lemmatizer.lemmatize(tok).strip()
         clean_tokens.append(clean_tok)
         
     return clean_tokens
@@ -52,19 +59,23 @@ def tokenize(text):
 
 def build_model():
     pipeline = Pipeline([
-        ('vect', CountVectorizer(tokenizer=tokenize)),
-        ('tfidf', TfidfTransformer()),
-        ('clf', MultiOutputClassifier(RandomForestClassifier()))])
-    
+        ('tfidf-vect', TfidfVectorizer(tokenizer=tokenize)),
+        ('clf', MultiOutputClassifier(RandomForestClassifier(class_weight='balanced', 
+                                                             n_jobs=10, 
+                                                             max_leaf_nodes=4,
+                                                             n_estimators=10,
+                                                             random_state=42)))])
+         
     return pipeline
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
     # predict on test data
     y_pred = model.predict(X_test)
-
-    for i in range(y_pred.shape[1]):
-        print("{}: {}".format(category_names[i], classification_report(Y_test[:,i],y_pred[:,i])))
+    start = time.time()
+    print(classification_report(Y_test, y_pred, target_names=category_names))    
+    end = time.time()
+    print('testing time: {}'.format(end-start))
 
 
 def save_model(model, model_filepath):
@@ -83,13 +94,18 @@ def main():
         model = build_model()
         
         print('Training model...')
-        model.fit(X_train, Y_train)
+        parameters = {
+             'tfidf-vect__ngram_range': ((1, 1), (1, 2))
+        }
+
+        cv = GridSearchCV(model, param_grid=parameters, verbose=1, n_jobs=-1, scoring='f1_weighted')
+        cv.fit(X_train, Y_train)
         
         print('Evaluating model...')
-        evaluate_model(model, X_test, Y_test, category_names)
+        evaluate_model(cv, X_test, Y_test, category_names)
 
         print('Saving model...\n    MODEL: {}'.format(model_filepath))
-        save_model(model, model_filepath)
+        save_model(cv, model_filepath)
 
         print('Trained model saved!')
 
