@@ -4,12 +4,12 @@ from sqlalchemy import create_engine
 
 def load_data(messages_filepath, categories_filepath):
     '''
-    Load csv data and return equivalent pandas DataFrames
+        Load csv data and return equivalent pandas DataFrames
     input:
-        - messages_filepath : path to messages dataset
-        - categories_filepath : path to categories dataset
+        - messages_filepath : string, path to messages dataset
+        - categories_filepath : string, path to categories dataset
     output:
-        - df : merged messages and categories dataframe
+        - df : pandas dataframe, merged messages and categories dataframe
     '''
     messages = pd.read_csv(messages_filepath)
     categories = pd.read_csv(categories_filepath)
@@ -20,11 +20,11 @@ def load_data(messages_filepath, categories_filepath):
 
 def clean_data(df):
     '''
-    clean and organize dataframe to be used for future training
+        clean and organize dataframe to be used for future training
     input:
-        - df : pandas dataframe to be cleaned
+        - df : pandas dataframe, data to be cleaned
     output:
-        - df : cleaned dataframe
+        - df : pandas dataframe, cleaned dataframe
     '''
     categories_df = df['categories'].str.split(';', expand = True)
     
@@ -58,8 +58,8 @@ def save_data(df, database_filename):
     '''
         Save df to sql database file
     input:
-        - df : dataframe to be saved
-        - database_filename : path name to be used for saving dataframe
+        - df : pandas dataframe, dataframe to be saved
+        - database_filename : string, path name to be used for saving dataframe
     '''
     engine = create_engine('sqlite:///data/DisasterResponse.db')
     df.to_sql('DisasterResponse', engine, index=False, if_exists='replace')  

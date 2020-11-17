@@ -18,6 +18,13 @@ from sqlalchemy import create_engine
 app = Flask(__name__)
 
 def tokenize(text):
+    '''
+        Function to transform text data into clean tokens
+    input:
+        - text : List, text data to be converted into tokens
+    output:
+        - clean_tokens : List, cleaned tokens
+    '''
     # normalize case and remove punctuation
     text = re.sub(r"[^a-zA-Z0-9]", " ", text.lower())
     tokens = word_tokenize(text)
@@ -46,10 +53,10 @@ model = joblib.load("../models/classifier.pkl")
 def index():
     
     # extract data needed for visuals
-    # TODO: Below is an example - modify to extract data for your own visuals
     genre_counts = df.groupby('genre').count()['message']
     genre_names = list(genre_counts.index)
     
+    # category names and their corresponding counts
     cat_cols = df.columns[7:]
     cat_count = df[cat_cols].sum().sort_values().reset_index()
     

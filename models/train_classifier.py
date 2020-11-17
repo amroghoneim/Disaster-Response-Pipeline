@@ -10,7 +10,6 @@ import pickle
 import numpy as np
 import pandas as pd
 from sklearn.svm import SVC
-
 from nltk.corpus import stopwords
 from sqlalchemy import create_engine
 from sklearn.pipeline import Pipeline
@@ -28,6 +27,15 @@ from sklearn.metrics import confusion_matrix,classification_report, f1_score
 
 
 def load_data(database_filepath):
+    '''
+        Load data from database into pandas dataframe and split into features, labels and category names
+    input:
+        - database_filepath : pandas dataframe, data to be used for training
+    output:
+        - X : Pandas Series, messages data to be used for training
+        - y : Pandas Series, messages corresponding multi-label. binary values (0-1)
+        - category_names : List, Name for each label
+    '''
     # load data from database
     engine = create_engine('sqlite:///'+database_filepath)
     df = pd.read_sql_table(engine.table_names()[0], con = engine)
@@ -42,13 +50,21 @@ def load_data(database_filepath):
 
 
 def tokenize(text):
+    '''
+        Function to transform text data into clean tokens
+    input:
+        - text : List, text data to be converted into tokens
+    output:
+        - clean_tokens : List, cleaned tokens
+    '''
     # normalize case and remove punctuation
     text = re.sub(r"[^a-zA-Z0-9]", " ", text.lower())
     tokens = word_tokenize(text)
+    # remove stop words
     stop_words = stopwords.words('english')
     tokens = [w for w in tokens if w not in stop_words]
+    # lemmatize tokens
     lemmatizer = WordNetLemmatizer()
-
     clean_tokens = []
     for tok in tokens:
         clean_tok = lemmatizer.lemmatize(tok).strip()
@@ -58,6 +74,13 @@ def tokenize(text):
 
 
 def build_model():
+    '''
+        Function to build machine learning pipeline
+    input:
+        - None
+    output:
+        - pipeline : Sklearn Pipeline Object, machine learning pipeline
+    '''
     pipeline = Pipeline([
         ('tfidf-vect', TfidfVectorizer(tokenizer=tokenize)),
         ('clf', MultiOutputClassifier(RandomForestClassifier(class_weight='balanced', 
@@ -70,6 +93,16 @@ def build_model():
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
+    '''
+        Function to evaluate machine learning model performance
+    input:
+        - model: Sklearn Pipeline Object, machine learning model to be used for prediction
+        - X_test: List, test data
+        - Y_test: List, test data labels
+        - category_names: List, label names
+    output:
+        - None
+    '''
     # predict on test data
     y_pred = model.predict(X_test)
     start = time.time()
@@ -79,11 +112,22 @@ def evaluate_model(model, X_test, Y_test, category_names):
 
 
 def save_model(model, model_filepath):
+    '''
+        Function to save machine learning model to disk
+    input:
+        - model : Sklearn Pipeline Object, model to be saved
+        - model_file_path : string, path used to save model
+    output:
+        - None
+    '''
     # save the model to disk
     pickle.dump(model, open(model_filepath, 'wb'))
 
 
 def main():
+    '''
+        Main function that executes the program
+    '''
     if len(sys.argv) == 3:
         database_filepath, model_filepath = sys.argv[1:]
         print('Loading data...\n    DATABASE: {}'.format(database_filepath))
