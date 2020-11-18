@@ -80,8 +80,7 @@ def build_model():
     '''
     pipeline = Pipeline([
         ('tfidf-vect', TfidfVectorizer(tokenizer=tokenize)),
-        ('clf', MultiOutputClassifier(RandomForestClassifier(class_weight='balanced', 
-                                                             n_jobs=10, 
+        ('clf', MultiOutputClassifier(RandomForestClassifier(class_weight='balanced',
                                                              max_leaf_nodes=4,
                                                              n_estimators=10,
                                                              random_state=42)))])
@@ -89,7 +88,7 @@ def build_model():
              'tfidf-vect__ngram_range': ((1, 1), (1, 2))
     }
 
-    cv = GridSearchCV(pipeline, param_grid=parameters, verbose=1, n_jobs=-1, scoring='f1_weighted')
+    cv = GridSearchCV(pipeline, param_grid=parameters, verbose=1, scoring='f1_weighted')
          
     return cv
 
