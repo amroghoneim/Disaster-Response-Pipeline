@@ -35,6 +35,7 @@ Code was developed in Python 3.6.3 and the following libraries are needed:
 - sqlalchemy
 - plotly
 - Flask
+- Joblib
 
 ### Instructions:
 1. Run the following commands in the project's root directory to set up your database and model.
