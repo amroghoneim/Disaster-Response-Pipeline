@@ -7,7 +7,7 @@ the data for training, train a machine learning model on the cleaned data and de
 
 ### Description of files:
 
-The diagram below shows the repo directory tree and description for each file:
+Below shows the repo directory tree and description for each file:
 ```
 -app
 	->templates
