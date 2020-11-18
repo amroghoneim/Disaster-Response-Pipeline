@@ -5,7 +5,6 @@ import nltk
 import warnings
 warnings.filterwarnings('ignore')
 nltk.download(['punkt', 'wordnet', 'stopwords'])
-import time
 import pickle
 import numpy as np
 import pandas as pd
@@ -15,15 +14,13 @@ from sqlalchemy import create_engine
 from sklearn.pipeline import Pipeline
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
-from nltk.stem.porter import PorterStemmer
 from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import classification_report
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import fbeta_score, make_scorer
-from sklearn.utils.multiclass import type_of_target
 from sklearn.model_selection import train_test_split
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics import confusion_matrix,classification_report, f1_score
+
 
 
 def load_data(database_filepath):
@@ -88,8 +85,13 @@ def build_model():
                                                              max_leaf_nodes=4,
                                                              n_estimators=10,
                                                              random_state=42)))])
+    parameters = {
+             'tfidf-vect__ngram_range': ((1, 1), (1, 2))
+    }
+
+    cv = GridSearchCV(pipeline, param_grid=parameters, verbose=1, n_jobs=-1, scoring='f1_weighted')
          
-    return pipeline
+    return cv
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
@@ -105,10 +107,7 @@ def evaluate_model(model, X_test, Y_test, category_names):
     '''
     # predict on test data
     y_pred = model.predict(X_test)
-    start = time.time()
     print(classification_report(Y_test, y_pred, target_names=category_names))    
-    end = time.time()
-    print('testing time: {}'.format(end-start))
 
 
 def save_model(model, model_filepath):
@@ -138,18 +137,14 @@ def main():
         model = build_model()
         
         print('Training model...')
-        parameters = {
-             'tfidf-vect__ngram_range': ((1, 1), (1, 2))
-        }
 
-        cv = GridSearchCV(model, param_grid=parameters, verbose=1, n_jobs=-1, scoring='f1_weighted')
-        cv.fit(X_train, Y_train)
+        model.fit(X_train, Y_train)
         
         print('Evaluating model...')
-        evaluate_model(cv, X_test, Y_test, category_names)
+        evaluate_model(model, X_test, Y_test, category_names)
 
         print('Saving model...\n    MODEL: {}'.format(model_filepath))
-        save_model(cv, model_filepath)
+        save_model(model, model_filepath)
 
         print('Trained model saved!')
 
