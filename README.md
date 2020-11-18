@@ -8,20 +8,21 @@ the data for training, train a machine learning model on the cleaned data and de
 ### Description of files:
 
 The diagram below shows the repo directory tree and description for each file:
+```
 -app
 	->templates
-    	->go.html - shows the classification results of the given messages on the webapp
-        ->master.html - the main html and javascript code for the webapp
-    ->run.py - script responsible for running the webapp
+    		->go.html - shows the classification results of the given messages on the webapp
+        	->master.html - the main html and javascript code for the webapp
+	->run.py - script responsible for running the webapp
 -data
 	->DisasterResponse.db - Database created after cleaning the dataset
-    ->disaster_categories.csv - corresponding categories for each message
-    ->disaster_messages.csv - disaster response messages
-    ->process_data.py - ETL pipeline
+		->disaster_categories.csv - corresponding categories for each message
+    		->disaster_messages.csv - disaster response messages
+    	->process_data.py - ETL pipeline
 -model
 	->classifier.pkl - machine learning model saved to disk
-    ->train_classifier.py - Machine learning pipeline
-
+   	->train_classifier.py - Machine learning pipeline
+```
 ### python libraries needed:
 
 Code was developed in Python 3.6.3 and the following libraries are needed:
